@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+build/
+dist/
+
+# Environment and secrets
+.env
+.env.*
+
+# Model weights and caches
+*.gguf
+*.safetensors
+*.bin
+.cache/
+hf_cache/
+
+# Experiment outputs (commit curated results only)
+runs/
+workspaces/
+logs/
+*.log
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
