@@ -2,14 +2,14 @@
 
 Lane: Applied ML
 Use for: Applied ML, industrial ML, sustainability/data systems PhDs
-Plan slot: Week 3
-Status: todo
+Plan slot: 20 to 30 Oct 2026
+Status: wip
 
 ## Deliverables
-- Cleaned public or synthetic time-series / tabular forecast task
-- Baseline + one stronger model
+- Cleaned public GB grid time series (NESO Historic GB Generation Mix)
+- Target: GB wind generation (hourly), forecast day-ahead (next 24 hours)
+- Baselines (seasonal naive, SARIMA) + LightGBM on lag and calendar features
 - Error analysis and uncertainty notes
-- Privacy note if using sensitive-like fields (k-anonymity lesson from YoutanGen)
 
 ## Links (fill when live)
 - GitHub:
