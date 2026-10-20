@@ -1,0 +1,28 @@
+p,d,q,P,D,Q,s,aic,converged,fit_seconds,warnings,selected
+1,1,0,0,0,1,24,20019.985,True,0.6,,False
+1,1,0,1,0,0,24,20019.927,True,0.5,,False
+1,1,0,1,0,1,24,20013.104,True,4.7,,True
+1,1,1,0,0,1,24,20021.79,True,0.6,,False
+1,1,1,1,0,0,24,20021.734,True,0.6,,False
+1,1,1,1,0,1,24,20014.933,True,5.5,,False
+1,1,2,0,0,1,24,20023.141,True,1.6,,False
+1,1,2,1,0,0,24,20023.088,True,0.9,,False
+1,1,2,1,0,1,24,20016.364,True,5.3,,False
+2,1,0,0,0,1,24,20021.776,True,0.4,,False
+2,1,0,1,0,0,24,20021.721,True,0.5,,False
+2,1,0,1,0,1,24,20014.921,True,4.7,,False
+2,1,1,0,0,1,24,20022.189,True,2.4,,False
+2,1,1,1,0,0,24,20022.123,True,2.4,,False
+2,1,1,1,0,1,24,20015.527,True,9.1,,False
+2,1,2,0,0,1,24,20020.728,True,2.3,,False
+2,1,2,1,0,0,24,20020.665,True,2.5,,False
+2,1,2,1,0,1,24,20014.276,True,9.2,,False
+3,1,0,0,0,1,24,20023.219,True,0.8,,False
+3,1,0,1,0,0,24,20023.165,True,0.8,,False
+3,1,0,1,0,1,24,20016.44,True,6.0,,False
+3,1,1,0,0,1,24,20021.269,True,2.3,,False
+3,1,1,1,0,0,24,20021.207,True,2.0,,False
+3,1,1,1,0,1,24,20014.793,False,9.9,Maximum Likelihood optimization failed to converge. Check mle_retvals,False
+3,1,2,0,0,1,24,20019.529,True,4.1,,False
+3,1,2,1,0,0,24,20019.468,True,5.1,,False
+3,1,2,1,0,1,24,20020.556,False,8.8,Maximum Likelihood optimization failed to converge. Check mle_retvals,False

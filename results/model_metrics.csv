@@ -1,0 +1,6 @@
+model,n,mae_mw,rmse_mw,rel_mae_vs_persistence,rel_mae_vs_snaive_day,rel_mae_vs_snaive_week,coverage_80,mean_width_80_mw,coverage_95,mean_width_95_mw
+persistence,8760,2456.8,3432.2,1.0,0.6828,0.5226,,,,
+seasonal_naive_day,8760,3597.9,4659.8,1.4645,1.0,0.7653,,,,
+seasonal_naive_week,8760,4701.4,5868.7,1.9136,1.3067,1.0,,,,
+sarima,8760,2337.1,3327.5,0.9513,0.6496,0.4971,0.8055,7859.8,0.9237,12020.5
+lightgbm,8760,2701.7,3658.7,1.0997,0.7509,0.5747,0.8062,8816.2,0.955,13688.7
