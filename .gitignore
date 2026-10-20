@@ -36,3 +36,6 @@ logs/
 .DS_Store
 .vscode/
 .idea/
+# Data (rebuild with src.download_data)
+data/raw/
+data/processed/
