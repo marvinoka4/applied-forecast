@@ -20,6 +20,13 @@ RAW_DOWNLOAD = DATA_RAW / "neso_generation_mix_download.csv"
 RAW_SNAPSHOT = DATA_RAW / "neso_generation_mix_to_2026-09-30.csv"
 HOURLY = DATA_PROCESSED / "wind_hourly.csv"
 
+# Committed hourly slice: enough history for every window in PROTOCOL.md.
+# The backtest runs from it when the raw download is absent.
+SNAPSHOT_MD = ROOT / "data" / "SNAPSHOT.md"
+SLICE = ROOT / "data" / "wind_hourly_2024-09-01_2026-09-30.csv.gz"
+SLICE_START = "2024-09-01T00:00:00"
+SLICE_END = "2026-09-30T23:00:00"
+
 # Snapshot cutoff: last half-hour kept is 2026-09-30 23:30 UTC.
 CUTOFF_EXCLUSIVE = "2026-10-01T00:00:00"
 

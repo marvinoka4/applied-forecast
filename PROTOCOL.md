@@ -4,7 +4,8 @@ Fixed on 2026-10-20, before any model was fitted. Any later change is recorded i
 
 ## Data
 - Source: NESO Data Portal, "Historic GB Generation Mix", half-hourly, frozen at 30 Sep 2026 23:30 UTC. See data/SNAPSHOT.md for the URL, download time, row count and SHA256.
-- Target: GB wind generation, hourly, from the `WIND` column. Unit: MW (average power over the hour).
+- Target: GB transmission-metered wind generation (NESO WIND column, excludes embedded wind), hourly. Unit: MW (average power over the hour).
+- Committed slice: data/wind_hourly_2024-09-01_2026-09-30.csv.gz holds the hourly target from 2024-09-01 00:00 to 2026-09-30 23:00 UTC, with its SHA256 in data/SNAPSHOT.md. When the raw download is absent, every step runs from this file. It covers every window below: the earliest value needed is 2024-09-24 00:00 UTC, 168 hours before the first training origin.
 - Hourly value: mean of the two half-hourly values that start in the hour, labelled by hour start in UTC. An hour with either half-hour missing is missing; nothing is filled.
 - All timestamps are UTC, so GB clock changes do not create gaps or duplicate hours.
 
@@ -45,13 +46,15 @@ Models 1 to 3 have no parameters and are not refitted.
 - Baselines have no intervals.
 
 ## Metrics
-- Point: MAE, RMSE, and MAE relative to the daily seasonal naive (model MAE divided by daily seasonal naive MAE on the same pairs). MAE relative to the weekly seasonal naive is also reported.
+- Point: MAE and RMSE.
+- Primary reference metric: MAE relative to persistence (model MAE divided by persistence MAE on the same pairs). Reason: persistence is the strongest naive baseline on this series, so beating it is the meaningful bar.
+- Secondary: MAE relative to the daily seasonal naive and MAE relative to the weekly seasonal naive.
 - Interval (SARIMA and LightGBM): empirical coverage and mean interval width at 80% and 95%.
 - Each metric is reported overall and for each horizon 1 to 24.
 - Scoring set: every test origin and horizon pair whose target is observed and whose persistence and seasonal naive inputs are observed. All models are scored on this same set, and its size is reported.
 
 ## Other choices
-- Target column `WIND` excludes embedded (distribution-connected) wind, which NESO publishes separately as `WIND_EMB`. Reason: `WIND` is metered transmission outturn, while `WIND_EMB` is an estimate; forecasting the metered series avoids mixing in a modelled quantity.
+- Target: GB transmission-metered wind generation (NESO WIND column, excludes embedded wind). Embedded (distribution-connected) wind is published separately as `WIND_EMB` and is not added. Reason: `WIND` is metered transmission outturn, while `WIND_EMB` is an estimate; forecasting the metered series avoids mixing in a modelled quantity.
 - Seeds: 42 for every random component. Reason: results must be reproducible from a clean clone plus the data snapshot.
 - Software: Python 3.12.10 with the pinned versions in requirements.txt, CPU only.
 
@@ -63,3 +66,6 @@ Models 1 to 3 have no parameters and are not refitted.
 
 ## Change log
 - 2026-10-20: protocol fixed.
+- 2026-10-20, before any model was fitted: target naming clarified to "GB transmission-metered wind generation (NESO WIND column, excludes embedded wind)". The target series itself is unchanged.
+- 2026-10-20, before any model was fitted: MAE relative to persistence added as the primary reference metric, because the Phase 1 baselines showed persistence is much stronger than the daily seasonal naive (MAE 2,457 vs 3,598 MW). Seasonal naive ratios kept as secondary metrics. Only baseline results existed at the time.
+- 2026-10-20, before any model was fitted: committed hourly data slice added (data/wind_hourly_2024-09-01_2026-09-30.csv.gz) so the backtest is reproducible from a clean clone. Baselines from the slice match those from the raw snapshot byte for byte.

@@ -29,7 +29,8 @@ from src.config import (  # noqa: E402
 )
 from src.metrics import mae, rmse  # noqa: E402
 
-REFERENCE = "seasonal_naive_day"
+# Primary reference for relative MAE (PROTOCOL.md, Metrics).
+REFERENCE = "persistence"
 
 
 def forecasts(series):
@@ -57,6 +58,7 @@ def summarise(scored):
     groups = [("all", scored)] + [(str(h), g) for h, g in scored.groupby("horizon")]
     for label, group in groups:
         ref_mae = mae(group["y"], group[REFERENCE])
+        day_mae = mae(group["y"], group["seasonal_naive_day"])
         week_mae = mae(group["y"], group["seasonal_naive_week"])
         for name in BASELINES:
             model_mae = mae(group["y"], group[name])
@@ -66,7 +68,8 @@ def summarise(scored):
                 "n": len(group),
                 "mae_mw": round(model_mae, 1),
                 "rmse_mw": round(rmse(group["y"], group[name]), 1),
-                "rel_mae_vs_snaive_day": round(model_mae / ref_mae, 4),
+                "rel_mae_vs_persistence": round(model_mae / ref_mae, 4),
+                "rel_mae_vs_snaive_day": round(model_mae / day_mae, 4),
                 "rel_mae_vs_snaive_week": round(model_mae / week_mae, 4),
             })
     return pd.DataFrame(out)
@@ -79,9 +82,9 @@ def plot_series(series):
     ax.plot(view.index, view.to_numpy() / 1000, lw=0.3, color="#1f4e79")
     ax.axvspan(pd.Timestamp(TEST_START, tz="UTC"), view.index.max(), color="#f2b134", alpha=0.15,
                label="Test period")
-    ax.set_ylabel("GB wind generation (GW, hourly mean)")
-    ax.set_title("Cleaned hourly GB wind generation (NESO WIND column), "
-                 "first training window and test period")
+    ax.set_ylabel("Wind generation (GW, hourly mean)")
+    ax.set_title("GB transmission-metered wind generation (NESO WIND column, excludes embedded "
+                 "wind)\nfirst training window and test period", fontsize=10)
     ax.legend(loc="upper right")
     ax.margins(x=0)
     fig.tight_layout()
@@ -98,7 +101,8 @@ def plot_mae(summary):
         ax.plot(part["h"], part["mae_mw"], style, ms=3, label=name.replace("_", " "))
     ax.set_xlabel("Horizon (hours after 00:00 UTC origin)")
     ax.set_ylabel("MAE (MW)")
-    ax.set_title("Baseline MAE by horizon, test period 1 Oct 2025 to 30 Sep 2026")
+    ax.set_title("Baseline MAE by horizon, GB transmission-metered wind\n"
+                 "test period 1 Oct 2025 to 30 Sep 2026", fontsize=10)
     ax.set_xticks(range(1, HORIZON + 1, 2))
     ax.grid(alpha=0.3)
     ax.legend()
@@ -117,8 +121,9 @@ def main():
     RESULTS.mkdir(parents=True, exist_ok=True)
     FIGURES.mkdir(parents=True, exist_ok=True)
     DATA_PROCESSED.mkdir(parents=True, exist_ok=True)
-    summary.to_csv(RESULTS / "baselines.csv", index=False)
-    frame.to_csv(DATA_PROCESSED / "forecasts_baselines.csv", index=False, float_format="%.1f")
+    summary.to_csv(RESULTS / "baselines.csv", index=False, lineterminator="\n")
+    frame.to_csv(DATA_PROCESSED / "forecasts_baselines.csv", index=False, float_format="%.1f",
+                 lineterminator="\n")
     plot_series(series)
     plot_mae(summary)
     print(summary[summary["horizon"] == "all"].to_string(index=False))

@@ -1,14 +1,21 @@
 """Clean the frozen NESO snapshot and aggregate the wind series to hourly.
 
-Checks the snapshot hash, works in UTC, and reports gaps, duplicates,
-flat runs and outliers. Nothing is filled or removed silently: every
-action is written to results/cleaning_report.md.
+With the raw snapshot present: checks its hash, works in UTC, reports gaps,
+duplicates, flat runs and outliers to results/cleaning_report.md, writes the
+hourly series, and rebuilds the committed hourly slice. Nothing is filled
+or removed silently.
+
+Without the raw snapshot (a clean clone): checks the committed slice
+against the SHA256 in data/SNAPSHOT.md and writes the hourly series from it.
 
 Usage: python -m src.prepare
 """
 
+import gzip
 import hashlib
+import io
 import json
+import re
 
 import numpy as np
 import pandas as pd
@@ -18,7 +25,11 @@ from src.config import (
     HOURLY,
     RAW_SNAPSHOT,
     RESULTS,
+    SLICE,
+    SLICE_END,
+    SLICE_START,
     SNAPSHOT_JSON,
+    SNAPSHOT_MD,
     TARGET_COLUMN,
     TEST_END,
     TRAIN_WINDOW_DAYS,
@@ -30,6 +41,40 @@ COMPONENTS = ["GAS", "COAL", "NUCLEAR", "WIND", "WIND_EMB", "HYDRO", "IMPORTS",
               "BIOMASS", "OTHER", "SOLAR", "STORAGE"]
 FLAT_RUN_HALF_HOURS = 6
 RAMP_MW = 2000.0
+
+
+def expected_slice_sha():
+    """The slice SHA256 recorded in data/SNAPSHOT.md, or None if absent."""
+    match = re.search(r"Slice SHA256: `([0-9a-f]{64})`", SNAPSHOT_MD.read_text(encoding="utf-8"))
+    return match.group(1) if match else None
+
+
+def slice_bytes(hourly):
+    """Deterministic gzip of the hourly slice: LF endings, no name, mtime 0."""
+    part = hourly[pd.Timestamp(SLICE_START, tz="UTC"):pd.Timestamp(SLICE_END, tz="UTC")]
+    frame = part.rename("wind_mw").to_frame()
+    frame.index.name = "timestamp_utc"
+    text = frame.to_csv(float_format="%.1f", lineterminator="\n")
+    return gzip.compress(text.encode("utf-8"), compresslevel=9, mtime=0)
+
+
+def from_slice():
+    """Clean-clone path: verify the committed slice and write the hourly series."""
+    data = SLICE.read_bytes()
+    digest = hashlib.sha256(data).hexdigest()
+    expected = expected_slice_sha()
+    if digest != expected:
+        raise SystemExit(f"Slice hash mismatch: {digest} != {expected}")
+    text = gzip.decompress(data)
+    hourly = pd.read_csv(io.BytesIO(text), index_col="timestamp_utc",
+                         parse_dates=["timestamp_utc"])["wind_mw"]
+    gaps = pd.date_range(hourly.index.min(), hourly.index.max(), freq="1h").difference(hourly.index)
+    if len(gaps) or hourly.isna().any():
+        raise SystemExit("Slice has gaps or missing values")
+    DATA_PROCESSED.mkdir(parents=True, exist_ok=True)
+    HOURLY.write_bytes(text)
+    print(f"Raw snapshot absent. Used committed slice {SLICE.name} (SHA256 {digest}), "
+          f"{len(hourly)} hours from {hourly.index.min()} to {hourly.index.max()}.")
 
 
 def check_hash():
@@ -65,6 +110,9 @@ def ramps(series, threshold):
 
 
 def main():
+    if not RAW_SNAPSHOT.exists():
+        from_slice()
+        return
     facts = check_hash()
     raw, has_offset = load_raw()
     lines = ["# Cleaning report", "",
@@ -136,7 +184,9 @@ def main():
     log("- Action: none of these are changed. NESO states that it already applies "
         "seasonal decomposition to correct missing or irregular points, so flat runs "
         "may be its imputation.")
-    earliest_used = pd.Timestamp(TEST_START, tz="UTC") - pd.Timedelta(days=TRAIN_WINDOW_DAYS)
+    # Training window start, less 168 hours for the weekly lag features.
+    earliest_used = (pd.Timestamp(TEST_START, tz="UTC") - pd.Timedelta(days=TRAIN_WINDOW_DAYS)
+                     - pd.Timedelta(hours=168))
     flagged = [r[0] for r in runs] + list(ramp.index) + list(zero_dips.index)
     latest_flag = max(flagged) if flagged else None
     inside = latest_flag is not None and latest_flag >= earliest_used
@@ -158,9 +208,17 @@ def main():
     RESULTS.mkdir(parents=True, exist_ok=True)
     out = hourly.rename("wind_mw").to_frame()
     out.index.name = "timestamp_utc"
-    out.to_csv(HOURLY, float_format="%.1f")
+    out.to_csv(HOURLY, float_format="%.1f", lineterminator="\n")
     REPORT.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("\n".join(lines))
+
+    data = slice_bytes(hourly)
+    digest = hashlib.sha256(data).hexdigest()
+    expected = expected_slice_sha()
+    if expected is not None and digest != expected:
+        raise SystemExit(f"Rebuilt slice {digest} does not match SNAPSHOT.md {expected}")
+    SLICE.write_bytes(data)
+    print(f"\nSlice {SLICE.name}: SHA256 {digest}")
 
 
 if __name__ == "__main__":

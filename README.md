@@ -7,7 +7,7 @@ Status: wip
 
 ## Deliverables
 - Cleaned public GB grid time series (NESO Historic GB Generation Mix)
-- Target: GB wind generation (hourly), forecast day-ahead (next 24 hours)
+- Target: GB transmission-metered wind generation (NESO WIND column, excludes embedded wind), hourly, forecast day-ahead (next 24 hours)
 - Baselines (seasonal naive, SARIMA) + LightGBM on lag and calendar features
 - Error analysis and uncertainty notes
 

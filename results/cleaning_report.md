@@ -37,7 +37,7 @@ Snapshot: neso_generation_mix_to_2026-09-30.csv (SHA256 44198a5f54f4ace4441a76fa
   - 2023-07-15 23:00:00+00:00: change of 2324 MW, value 7777 MW
 - Half-hours at exactly 0 MW that are followed by another 0: 17, last at 2023-06-07 11:30:00+00:00. These look like metering outages (for example 2021-11-23 10:30 to 12:00).
 - Action: none of these are changed. NESO states that it already applies seasonal decomposition to correct missing or irregular points, so flat runs may be its imputation.
-- Earliest data used by the backtest: 2024-10-01 00:00:00+00:00. Latest flagged point: 2023-07-15 23:00:00+00:00. Flagged points inside the data used: none.
+- Earliest data used by the backtest: 2024-09-24 00:00:00+00:00. Latest flagged point: 2023-07-15 23:00:00+00:00. Flagged points inside the data used: none.
 
 ## Hourly aggregation
 - Hourly value = mean of the two half-hourly MW values starting in that hour (average power over the hour, MW), labelled by hour start in UTC.
