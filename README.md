@@ -40,7 +40,7 @@ Full metrics, overall and for each horizon: results/model_metrics.csv and result
 | SARIMA | Gaussian, from the model | 80.6% | 7,860 | 92.4% | 12,021 |
 | LightGBM | Split conformal | 80.6% | 8,816 | 95.5% | 13,689 |
 
-LightGBM's split conformal intervals stay within 3 percentage points of nominal at 95% for every horizon (94.2% to 97.8%), and at 80% for every horizon except hour 23 (83.6%). SARIMA's Gaussian intervals cover 92.4% overall at 95% and under-cover at horizons 8 to 21 (90.4% to 91.8%); at 80% they over-cover at hours 1 and 2 (85.8% and 83.0%). The conformal intervals are wider: 13,689 MW on average at 95%, against 12,021 MW for SARIMA.
+LightGBM's split conformal intervals stay within 3 percentage points of nominal at 95% for every horizon (94.2% to 97.8%), and at 80% for every horizon except hour 23 (83.6%). SARIMA's Gaussian intervals cover 92.4% overall at 95% and under-cover at horizons 8 to 21 (90.4% to 91.8%); at 80% they over-cover at hours 1 and 2 (85.8% and 83.0%). The conformal intervals are wider: 13,689 MW on average at 95%, against 12,021 MW for SARIMA. The two interval methods are attached to different point models, so this compares each model's intervals as delivered rather than the two methods on equal terms. Applying split conformal to SARIMA would separate the effect of the interval method from the effect of the model; that comparison was not pre-specified.
 
 ![Interval coverage by horizon at 80% and 95%](results/figures/coverage_by_horizon.png)
 
