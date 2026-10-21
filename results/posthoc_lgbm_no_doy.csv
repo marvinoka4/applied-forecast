@@ -1,0 +1,2 @@
+model,n,mae_mw,rmse_mw,rel_mae_vs_persistence,rel_mae_vs_snaive_day,rel_mae_vs_snaive_week,coverage_80,mean_width_80_mw,coverage_95,mean_width_95_mw
+lightgbm_no_doy,8760,2527.4,3367.6,1.0287,0.7025,0.5376,0.7913,8041.0,0.9613,13303.4

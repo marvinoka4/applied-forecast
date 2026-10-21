@@ -4,8 +4,15 @@ Writes results/model_metrics.csv (overall), results/model_metrics_by_horizon.csv
 results/figures/mae_by_horizon_all_models.png and
 results/figures/coverage_by_horizon.png.
 
-Usage: python -m src.evaluate
+Usage:
+  python -m src.evaluate           pre-specified models
+  python -m src.evaluate posthoc   post-hoc LightGBM variant without the target day-of-year
+                                   features, scored on the same set; writes
+                                   results/posthoc_lgbm_no_doy.csv and
+                                   results/posthoc_lgbm_no_doy_by_horizon.csv
 """
+
+import sys
 
 import matplotlib
 
@@ -22,6 +29,7 @@ from src.run_baselines import forecasts, scoring_set  # noqa: E402
 
 MODELS = ["persistence", "seasonal_naive_day", "seasonal_naive_week", "sarima", "lightgbm"]
 INTERVAL_MODELS = ["sarima", "lightgbm"]
+POSTHOC = "lightgbm_no_doy"
 LABELS = {"persistence": "Persistence", "seasonal_naive_day": "Seasonal naive, day",
           "seasonal_naive_week": "Seasonal naive, week", "sarima": "SARIMA",
           "lightgbm": "LightGBM"}
@@ -50,10 +58,10 @@ def joined():
     return base, scored
 
 
-def metrics(group):
+def metrics(group, models=MODELS):
     out = []
     ref = {name: mae(group["y"], group[f"{name}_yhat"]) for name in BASELINES}
-    for name in MODELS:
+    for name in models:
         yhat = group[f"{name}_yhat"]
         m = mae(group["y"], yhat)
         row = {"model": name, "n": len(group), "mae_mw": round(m, 1),
@@ -62,7 +70,7 @@ def metrics(group):
                "rel_mae_vs_snaive_day": round(m / ref["seasonal_naive_day"], 4),
                "rel_mae_vs_snaive_week": round(m / ref["seasonal_naive_week"], 4)}
         for lvl in ["80", "95"]:
-            if name in INTERVAL_MODELS:
+            if name in INTERVAL_MODELS or name == POSTHOC:
                 lo, hi = group[f"{name}_lo{lvl}"], group[f"{name}_hi{lvl}"]
                 row[f"coverage_{lvl}"] = round(coverage(group["y"], lo, hi), 4)
                 row[f"mean_width_{lvl}_mw"] = round(mean_width(lo, hi), 1)
@@ -128,5 +136,22 @@ def main():
     print(overall.to_string(index=False))
 
 
+def posthoc():
+    _, scored = joined()
+    scored = scored.merge(load_model(lgbm.FORECASTS_NO_DOY, POSTHOC), on=["origin", "horizon"],
+                          how="left", validate="one_to_one")
+    missing = scored[f"{POSTHOC}_yhat"].isna().sum()
+    if missing:
+        raise RuntimeError(f"{POSTHOC} has no forecast for {missing} scored pairs")
+    overall = pd.DataFrame(metrics(scored, [POSTHOC]))
+    by_h = pd.concat([pd.DataFrame(metrics(g, [POSTHOC])).assign(horizon=h)
+                      for h, g in scored.groupby("horizon")], ignore_index=True)
+    by_h = by_h[["model", "horizon", *[c for c in overall.columns if c != "model"]]]
+    overall.to_csv(RESULTS / "posthoc_lgbm_no_doy.csv", index=False, lineterminator="\n")
+    by_h.to_csv(RESULTS / "posthoc_lgbm_no_doy_by_horizon.csv", index=False,
+                lineterminator="\n")
+    print(overall.to_string(index=False))
+
+
 if __name__ == "__main__":
-    main()
+    posthoc() if sys.argv[1:] == ["posthoc"] else main()

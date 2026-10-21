@@ -2,8 +2,11 @@
 as fixed in PROTOCOL.md (LightGBM details, Prediction intervals).
 
 Usage:
-  python -m src.lgbm time       time one refit (24 models, calibration, week of forecasts)
-  python -m src.lgbm backtest   all 53 refits
+  python -m src.lgbm time              time one refit (24 models, calibration, week of forecasts)
+  python -m src.lgbm backtest          all 53 refits (the pre-specified model)
+  python -m src.lgbm backtest-no-doy   post-hoc variant without the target day-of-year
+                                       features, everything else identical (see the
+                                       PROTOCOL.md change log)
 """
 
 import sys
@@ -19,6 +22,8 @@ from src.config import DATA_PROCESSED, HORIZON, SEED, TEST_END, TRAIN_WINDOW_DAY
 from src.runlog import logged
 
 FORECASTS = DATA_PROCESSED / "forecasts_lgbm.csv"
+FORECASTS_NO_DOY = DATA_PROCESSED / "forecasts_lgbm_no_doy.csv"
+NO_DOY = ("target_doy_sin", "target_doy_cos")
 LEVELS = {"80": 0.20, "95": 0.05}
 PARAMS = {
     "objective": "regression",  # L2
@@ -37,14 +42,17 @@ PARAMS = {
 }
 
 
-def feature_tables(series):
-    """Features and targets for every hourly origin the backtest can use, per horizon."""
+def feature_tables(series, drop=()):
+    """Features and targets for every hourly origin the backtest can use, per horizon.
+
+    drop lists feature names to leave out; it is empty for the pre-specified model.
+    """
     first = pd.Timestamp(TEST_START, tz="UTC") - pd.Timedelta(days=TRAIN_WINDOW_DAYS)
     last = pd.Timestamp(TEST_END, tz="UTC")
     all_origins = pd.date_range(first, last, freq="1h")
     tables = {}
     for h in range(1, HORIZON + 1):
-        X = features.build(series, all_origins, h)
+        X = features.build(series, all_origins, h).drop(columns=list(drop))
         y = pd.Series(features.targets(series, all_origins, h), index=all_origins)
         tables[h] = (X, y)
     return tables
@@ -99,10 +107,10 @@ def time_one():
         print(rec["outcome"])
 
 
-def backtest():
+def backtest(drop=(), out=FORECASTS, label="LightGBM backtest, 53 refits"):
     series = load_hourly()
-    with logged("LightGBM backtest, 53 refits") as rec:
-        tables = feature_tables(series)
+    with logged(label) as rec:
+        tables = feature_tables(series, drop)
         all_rows, infos = [], []
         for refit in refit_dates():
             rows, info = run_refit(tables, refit)
@@ -110,12 +118,20 @@ def backtest():
             infos.append(info)
             print(f"{refit:%Y-%m-%d} {info['seconds']} s", flush=True)
         DATA_PROCESSED.mkdir(parents=True, exist_ok=True)
-        pd.DataFrame(all_rows).to_csv(FORECASTS, index=False, lineterminator="\n")
-        pd.DataFrame(infos).to_csv(DATA_PROCESSED / "lgbm_refits.csv", index=False,
+        pd.DataFrame(all_rows).to_csv(out, index=False, lineterminator="\n")
+        refits_name = out.name.replace("forecasts_", "refits_")
+        pd.DataFrame(infos).to_csv(DATA_PROCESSED / refits_name, index=False,
                                    lineterminator="\n")
         rec["outcome"] = f"{len(infos)} refits, {len(all_rows)} forecast rows"
         print(rec["outcome"])
 
 
 if __name__ == "__main__":
-    {"time": time_one, "backtest": backtest}[sys.argv[1]]()
+    commands = {
+        "time": time_one,
+        "backtest": backtest,
+        "backtest-no-doy": lambda: backtest(
+            NO_DOY, FORECASTS_NO_DOY,
+            "LightGBM post-hoc variant without target day-of-year features, 53 refits"),
+    }
+    commands[sys.argv[1]]()
