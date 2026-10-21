@@ -22,10 +22,10 @@ Each day from 1 Oct 2025 to 30 Sep 2026, every model forecast the next 24 hours 
 | SARIMA(1,1,0)(1,0,1,24) | **0.951** | 2,337 | 3,328 | 0.650 | 0.497 |
 | Persistence | 1.000 | 2,457 | 3,432 | 0.683 | 0.523 |
 | LightGBM | 1.100 | 2,702 | 3,659 | 0.751 | 0.575 |
-| Seasonal naive, day | 1.465 | 3,598 | 4,660 | 1.000 | 0.765 |
+| Seasonal naive, day | 1.464 | 3,598 | 4,660 | 1.000 | 0.765 |
 | Seasonal naive, week | 1.914 | 4,701 | 5,869 | 1.307 | 1.000 |
 
-SARIMA beats persistence: its MAE is 4.9% lower (ratio 0.951). The gain is largest at short horizons (272 against 372 MW at hour 1) and shrinks with horizon until the two are level at hour 24 (3,528 against 3,529 MW).
+SARIMA beats persistence: its MAE is 4.9% lower (ratio 0.951). The gain is largest at short horizons (273 against 372 MW at hour 1) and shrinks with horizon until the two are level at hour 24 (3,528 against 3,529 MW).
 
 The pre-specified LightGBM does not beat persistence (ratio 1.100). It is better at hours 1 to 5 and worse from hour 6 on. Diagnostics point to overfitting: at hour 24 its training error was about a tenth of its error on held-out data from before the test period, and the target hour's day-of-year features carried about a third of the model's gain. With a one-year training window, day of year and hour of day almost identify each target hour, so the model can learn dates rather than how wind generation evolves.
 
@@ -37,7 +37,7 @@ Full metrics, overall and for each horizon: results/model_metrics.csv and result
 
 | Model | Interval method | Coverage, 80% nominal | Mean width, 80% (MW) | Coverage, 95% nominal | Mean width, 95% (MW) |
 |---|---|---|---|---|---|
-| SARIMA | Gaussian, from the model | 80.6% | 7,860 | 92.4% | 12,021 |
+| SARIMA | Gaussian, from the model | 80.5% | 7,860 | 92.4% | 12,021 |
 | LightGBM | Split conformal | 80.6% | 8,816 | 95.5% | 13,689 |
 
 LightGBM's split conformal intervals stay within 3 percentage points of nominal at 95% for every horizon (94.2% to 97.8%), and at 80% for every horizon except hour 23 (83.6%). SARIMA's Gaussian intervals cover 92.4% overall at 95% and under-cover at horizons 8 to 21 (90.4% to 91.8%); at 80% they over-cover at hours 1 and 2 (85.8% and 83.0%). The conformal intervals are wider: 13,689 MW on average at 95%, against 12,021 MW for SARIMA. The two interval methods are attached to different point models, so this compares each model's intervals as delivered rather than the two methods on equal terms. Applying split conformal to SARIMA would separate the effect of the interval method from the effect of the model; that comparison was not pre-specified.
@@ -52,7 +52,7 @@ After the results above were known, one variant was run and recorded in the PROT
 |---|---|---|---|---|---|
 | LightGBM without day-of-year features (post-hoc) | 1.029 | 2,527 | 3,368 | 79.1% | 96.1% |
 | LightGBM (pre-specified) | 1.100 | 2,702 | 3,659 | 80.6% | 95.5% |
-| SARIMA (pre-specified) | 0.951 | 2,337 | 3,328 | 80.6% | 92.4% |
+| SARIMA (pre-specified) | 0.951 | 2,337 | 3,328 | 80.5% | 92.4% |
 
 Removing the two features lowers MAE by 6.5%, which is consistent with the overfitting diagnosis, but the variant still does not beat persistence overall. It is better than persistence at hours 1 to 6 only and does not beat SARIMA at any horizon. Its 95% intervals stay within 3 points of nominal at every horizon; its 80% intervals under-cover at hours 10 (76.7%) and 23 (77.0%). Metrics: results/posthoc_lgbm_no_doy.csv and results/posthoc_lgbm_no_doy_by_horizon.csv.
 
