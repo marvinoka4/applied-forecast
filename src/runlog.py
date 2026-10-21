@@ -21,7 +21,7 @@ def _now():
 def append(run, start, end, outcome):
     RESULTS.mkdir(parents=True, exist_ok=True)
     if not RUN_LOG.exists():
-        RUN_LOG.write_text(HEADER, encoding="utf-8")
+        RUN_LOG.write_text(HEADER, encoding="utf-8", newline="\n")
     seconds = (end - start).total_seconds()
     row = (f"| {run} | {start:%Y-%m-%d %H:%M:%S} | {end:%Y-%m-%d %H:%M:%S} | "
            f"{seconds:.1f} | {outcome} |\n")

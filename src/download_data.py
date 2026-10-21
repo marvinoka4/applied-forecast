@@ -87,7 +87,7 @@ def main():
         "snapshot_sha256": sha256(RAW_SNAPSHOT),
         "columns": header,
     }
-    SNAPSHOT_JSON.write_text(json.dumps(facts, indent=2) + "\n", encoding="utf-8")
+    SNAPSHOT_JSON.write_text(json.dumps(facts, indent=2) + "\n", encoding="utf-8", newline="\n")
     for key, value in facts.items():
         if key != "columns":
             print(f"{key}: {value}")

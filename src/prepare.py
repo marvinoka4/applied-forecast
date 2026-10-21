@@ -209,7 +209,7 @@ def main():
     out = hourly.rename("wind_mw").to_frame()
     out.index.name = "timestamp_utc"
     out.to_csv(HOURLY, float_format="%.1f", lineterminator="\n")
-    REPORT.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    REPORT.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
     print("\n".join(lines))
 
     data = slice_bytes(hourly)

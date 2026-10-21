@@ -11,3 +11,4 @@ Every model run, with start and end time (UTC) and outcome.
 | SARIMA backtest, 53 refits, order (1, 1, 0)(1, 0, 1, 24) | 2026-10-20 21:31:47 | 2026-10-20 21:34:49 | 182.4 | 53 refits, 0 convergence failures |
 | LightGBM backtest, 53 refits | 2026-10-20 21:31:47 | 2026-10-20 22:06:21 | 2074.3 | 53 refits, 8760 forecast rows |
 | LightGBM diagnostic fits (not part of results) | 2026-10-20 22:08:05 | 2026-10-20 22:08:05 | 0.0 | refits 2025-10-01 and 2026-04-01, horizons 1, 6, 12, 24 refitted to compare training and calibration-window MAE with persistence and to read gain importance; no protocol choice changed and no reported metric uses these fits |
+| LightGBM post-hoc variant without target day-of-year features, 53 refits | 2026-10-20 22:28:17 | 2026-10-20 23:05:58 | 2260.7 | 53 refits, 8760 forecast rows |
