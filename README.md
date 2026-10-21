@@ -63,6 +63,10 @@ Removing the two features lowers MAE by 6.5%, which is consistent with the overf
 - NESO applies its own correction to missing or irregular points before publishing, so some values may already be imputed.
 - One test year is a single realisation of weather; results may differ in another year.
 
+### Reproducibility
+
+The pre-specified backtest was rerun in a fresh clone of commit 9c1b63a, containing tracked files only, starting from the committed data slice (data/wind_hourly_2024-09-01_2026-09-30.csv.gz) rather than the raw download. Every metrics file, every figure, the snapshot files and all 26,280 per-pair forecasts (baselines, SARIMA and LightGBM) came out byte-identical to the committed versions. The only differences were wall-clock timing fields: new rows in results/run_log.md, the fit_seconds column in results/sarima_order_selection.csv, and the fit_seconds and total_seconds columns in results/sarima_refits.csv. Later commits add the post-hoc variant and documentation; none of them changes the pre-specified result files.
+
 ## Links (fill when live)
 - GitHub:
 - PDF / note:
